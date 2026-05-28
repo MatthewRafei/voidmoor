@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 #include <SDL3/SDL.h>
+
+#define WIDTH 320
+#define HEIGHT 180
 
 int main(void)
 {
@@ -24,6 +29,16 @@ int main(void)
         return EXIT_FAILURE;
     }
 
+    uint32_t *framebuffer = malloc((WIDTH * HEIGHT) * sizeof(uint32_t));
+    if(framebuffer == NULL){
+	    fprintf(stderr, "%s\n", "Failed to allocate framebuffer");
+	    SDL_DestroyRenderer(renderer);
+	    SDL_DestroyWindow(window);
+	    SDL_Quit();
+	    return EXIT_FAILURE;
+    }
+    memset(framebuffer, 0, ((WIDTH * HEIGHT) * sizeof(uint32_t)));
+
     int running = 1;
     SDL_Event event;
     while (running) {
@@ -36,6 +51,7 @@ int main(void)
         SDL_Delay(16);
     }
 
+    free(framebuffer);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
