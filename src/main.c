@@ -15,43 +15,55 @@ int main(void)
     }
 
     SDL_Window *window = SDL_CreateWindow("VoidMoor", 1280, 720, 0);
-    if (window == NULL) {
+    if (window == NULL){
         fprintf(stderr, "%s\n", SDL_GetError());
         SDL_Quit();
         return EXIT_FAILURE;
     }
 
     SDL_Renderer *renderer = SDL_CreateRenderer(window, NULL);
-    if (renderer == NULL) {
+    if (renderer == NULL){
         fprintf(stderr, "%s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return EXIT_FAILURE;
     }
 
-    uint32_t *framebuffer = malloc((WIDTH * HEIGHT) * sizeof(uint32_t));
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
+    if(texture == NULL){
+	fprintf(stderr, "%s\n", SDL_GetError());
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	SDL_Quit();
+	return EXIT_FAILURE;
+    }
+
+    uint32_t *framebuffer = calloc((WIDTH * HEIGHT), sizeof(uint32_t));
     if(framebuffer == NULL){
 	    fprintf(stderr, "%s\n", "Failed to allocate framebuffer");
 	    SDL_DestroyRenderer(renderer);
+	    SDL_DestroyTexture(texture);
 	    SDL_DestroyWindow(window);
 	    SDL_Quit();
 	    return EXIT_FAILURE;
     }
-    memset(framebuffer, 0, ((WIDTH * HEIGHT) * sizeof(uint32_t)));
-
+ 
     int running = 1;
     SDL_Event event;
-    while (running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
+    while (running){
+        while (SDL_PollEvent(&event)){
+            if (event.type == SDL_EVENT_QUIT){
                 running = 0;
             }
         }
+	SDL_UpdateTexture(texture, NULL, framebuffer, WIDTH * sizeof(uint32_t));
+	SDL_RenderTexture(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
 
     free(framebuffer);
+    SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
