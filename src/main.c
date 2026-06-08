@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include <SDL3/SDL.h>
 
 #define RED	0xFFFF0000
@@ -12,6 +13,9 @@
 
 #define WIDTH	320
 #define HEIGHT	180
+
+#define COLUMNS 8
+#define ROWS    8
 
 void tile_to_screen(int tx, int ty, int *sx, int *sy)
 {
@@ -31,8 +35,22 @@ void draw_to_screen(uint32_t *fb, int tx, int ty, uint32_t color)
     }
 }
 
+void render_tilemap(uint8_t tilemap[ROWS][COLUMNS], uint32_t *framebuffer)
+{
+    for(int i = 0; i < ROWS; i++){
+	for(int j = 0; j < COLUMNS; j++){
+	    if(tilemap[i][j] == 1){
+		draw_to_screen(framebuffer, j, i, GREEN);
+	    }
+	}
+    }
+}
+
 int main(void)
 {
+    uint8_t tilemap[ROWS][COLUMNS];
+    memset(tilemap, 1, sizeof(tilemap));    
+    
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         fprintf(stderr, "%s\n", SDL_GetError());
         return EXIT_FAILURE;
@@ -72,19 +90,16 @@ int main(void)
 	return EXIT_FAILURE;
     }
     
-    draw_to_screen(framebuffer, 0, 0, RED);
-    draw_to_screen(framebuffer, 1, 0, WHITE);
-    draw_to_screen(framebuffer, 0, 1, BLUE);
-    draw_to_screen(framebuffer, 1, 1, RED);
-    
-    int running = 1;
+    bool running = true;
     SDL_Event event;
     while (running){
+	memset(framebuffer, 0, WIDTH * HEIGHT * sizeof(*framebuffer));
         while (SDL_PollEvent(&event)){
             if (event.type == SDL_EVENT_QUIT){
-                running = 0;
+                running = false;
             }
         }
+	render_tilemap(tilemap, framebuffer);
 	SDL_UpdateTexture(texture, NULL, framebuffer, WIDTH * sizeof(uint32_t));
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
