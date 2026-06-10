@@ -35,19 +35,30 @@ void draw_to_screen(uint32_t *framebuffer, int tx, int ty, uint32_t color)
     }
 }
 
-// void draw_tile(uint32_t *framebuffer, int sx, int sy, uint32_t color)
-// {
-    
-    
-// }
+void draw_tile(uint32_t *framebuffer, int sx, int sy, uint32_t color)
+{
+    for(int dy = -16; dy <= 16; dy++){
+	for(int dx = -32; dx <= 32; dx++){
+	    if(abs(dx) * 16 + abs(dy) * 32 <= 512){
+		int px = sx + dx;
+		int py = sy + dy;
+		if(px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT){
+		    framebuffer[py * WIDTH + px] = color;
+		}
+	    }
+	}
+    }
+}
 
 void render_tilemap(uint8_t tilemap[ROWS][COLUMNS], uint32_t *framebuffer)
 {
     for(int i = 0; i < ROWS; i++){
 	for(int j = 0; j < COLUMNS; j++){
 	    if(tilemap[i][j] == 1){
-		draw_to_screen(framebuffer, j, i, GREEN);
-		// draw_tile(framebuffer, j, i, RED);
+		int sx = 0;
+		int sy = 0;
+		tile_to_screen(j, i, &sx, &sy);
+		draw_tile(framebuffer, sx, sy, (i + j) % 2 ? RED : GREEN);
 	    }
 	}
     }
