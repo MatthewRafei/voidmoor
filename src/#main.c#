@@ -20,8 +20,8 @@
 #define COLUMNS           8
 #define ROWS              8
 
-#define TILE_WIDTH        32
-#define TILE_HEIGHT       16
+#define TILE_WIDTH        64
+#define TILE_HEIGHT       32
 
 #define TILE_WIDTH_HALF   32
 #define TILE_HEIGHT_HALF  16
