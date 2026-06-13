@@ -2,12 +2,13 @@
 
 #include "render.h"
 #include "common.h"
+#include "camera.h"
 
 
-void tile_to_screen(int tx, int ty, int *sx, int *sy)
+void tile_to_screen(int tx, int ty, int *sx, int *sy, Camera *camera)
 {
-    *sx = (tx - ty) * TILE_WIDTH_HALF + (WIDTH / 2);
-    *sy = (tx + ty) * TILE_HEIGHT_HALF + (HEIGHT / 2);
+    *sx = (tx - ty) * TILE_WIDTH_HALF - camera->x + (WIDTH / 2);
+    *sy = (tx + ty) * TILE_HEIGHT_HALF - camera->y + (HEIGHT / 2);
 }
 
 void draw_tile(uint32_t *framebuffer, int sx, int sy, uint32_t color)
@@ -25,21 +26,21 @@ void draw_tile(uint32_t *framebuffer, int sx, int sy, uint32_t color)
     }
 }
 
-void render_tilemap(uint8_t tilemap[ROWS][COLUMNS], uint32_t *framebuffer)
+void render_tilemap(uint8_t tilemap[ROWS][COLUMNS], uint32_t *framebuffer, Camera *camera)
 {
     for(int i = 0; i < ROWS; i++){
 	for(int j = 0; j < COLUMNS; j++){
 	    if(tilemap[i][j] == 1){
 		int sx = 0;
 		int sy = 0;
-		tile_to_screen(j, i, &sx, &sy);
+		tile_to_screen(j, i, &sx, &sy, camera);
 		draw_tile(framebuffer, sx, sy, (i + j) % 2 ? RED : GREEN);
 	    }
 	}
     }
 }
 
-void render_player(uint32_t *framebuffer, Player player)
+void render_player(uint32_t *framebuffer, Player player, Camera *camera)
 {
     int tx = player.tx;
     int ty = player.ty;
@@ -47,7 +48,7 @@ void render_player(uint32_t *framebuffer, Player player)
     int sx = 0;
     int sy = 0;
 
-    tile_to_screen(tx, ty, &sx, &sy);
+    tile_to_screen(tx, ty, &sx, &sy, camera);
 
     if(sx >= 0 && sx < WIDTH && sy >= 0 && sy < HEIGHT){
 	draw_tile(framebuffer, sx, sy, player.color);

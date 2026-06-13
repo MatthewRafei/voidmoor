@@ -8,6 +8,7 @@
 #include "player.h"
 #include "render.h"
 #include "common.h"
+#include "camera.h"
 
 // TODO: Test painters algoithm
 // TODO: Create consistent frame
@@ -15,6 +16,7 @@
 int main(void)
 {
     Player player = {4, 4, BLUE};
+    Camera camera = { 4, 4};
 
     uint8_t tilemap[ROWS][COLUMNS];
     memset(tilemap, 1, sizeof(tilemap));
@@ -67,6 +69,7 @@ int main(void)
             if (event.type == SDL_EVENT_QUIT){
                 running = false;
             }
+            
             if (event.type == SDL_EVENT_KEY_DOWN) {
 		int tx_offset = 0;
 		int ty_offset = 0;
@@ -93,9 +96,12 @@ int main(void)
                 check_player_input(tx_offset, ty_offset, &player);
             }
         }
-    	render_tilemap(tilemap, framebuffer);
-	render_player(framebuffer, player);
-	SDL_UpdateTexture(texture, NULL, framebuffer, WIDTH * sizeof(uint32_t));
+        camera.x = (player.tx - player.ty) * TILE_WIDTH_HALF;
+	camera.y = (player.tx + player.ty) * TILE_HEIGHT_HALF;
+    	render_tilemap(tilemap, framebuffer, &camera);
+	render_player(framebuffer, player, &camera);
+        SDL_UpdateTexture(texture, NULL, framebuffer, WIDTH * sizeof(uint32_t));
+        SDL_RenderClear(renderer);
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
