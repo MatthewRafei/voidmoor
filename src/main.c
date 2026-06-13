@@ -5,84 +5,12 @@
 #include <stdbool.h>
 #include <SDL3/SDL.h>
 
+#include "player.h"
+#include "render.h"
+#include "common.h"
+
 // TODO: Test painters algoithm
-// TODO: Create consistent frame timing
-
-#define RED	          0xFFFF0000
-#define GREEN	          0xFF00FF00
-#define BLUE	          0xFF0000FF
-#define BLACK	          0xFF000000
-#define WHITE	          0xFFFFFFFF
-
-#define WIDTH	          640
-#define HEIGHT	          360
-
-#define COLUMNS           8
-#define ROWS              8
-
-#define TILE_WIDTH        32
-#define TILE_HEIGHT       16
-
-#define TILE_WIDTH_HALF   32
-#define TILE_HEIGHT_HALF  16
-
-#define TILE_DIAMOND_THRESHOLD (TILE_WIDTH_HALF * TILE_HEIGHT_HALF)
-
-typedef struct {
-    int tx;
-    int ty;
-    uint32_t color;
-} Player;
-
-void tile_to_screen(int tx, int ty, int *sx, int *sy)
-{
-    *sx = (tx - ty) * TILE_WIDTH_HALF + (WIDTH / 2);
-    *sy = (tx + ty) * TILE_HEIGHT_HALF + (HEIGHT / 2);
-}
-
-void draw_tile(uint32_t *framebuffer, int sx, int sy, uint32_t color)
-{
-    for(int dy = -TILE_HEIGHT_HALF; dy < TILE_HEIGHT_HALF; dy++){
-	for(int dx = -TILE_WIDTH_HALF; dx < TILE_WIDTH_HALF; dx++){
-	    if(abs(dx) * TILE_HEIGHT_HALF + abs(dy) * TILE_WIDTH_HALF <= TILE_DIAMOND_THRESHOLD){
-		int px = sx + dx;
-		int py = sy + dy;
-		if(px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT){
-		    framebuffer[py * WIDTH + px] = color;
-		}
-	    }
-	}
-    }
-}
-
-void render_tilemap(uint8_t tilemap[ROWS][COLUMNS], uint32_t *framebuffer)
-{
-    for(int i = 0; i < ROWS; i++){
-	for(int j = 0; j < COLUMNS; j++){
-	    if(tilemap[i][j] == 1){
-		int sx = 0;
-		int sy = 0;
-		tile_to_screen(j, i, &sx, &sy);
-		draw_tile(framebuffer, sx, sy, (i + j) % 2 ? RED : GREEN);
-	    }
-	}
-    }
-}
-
-void render_player(uint32_t *framebuffer, Player player)
-{
-    int tx = player.tx;
-    int ty = player.ty;
-
-    int sx = 0;
-    int sy = 0;
-
-    tile_to_screen(tx, ty, &sx, &sy);
-
-    if(sx >= 0 && sx < WIDTH && sy >= 0 && sy < HEIGHT){
-	draw_tile(framebuffer, sx, sy, player.color);
-    }
-}
+// TODO: Create consistent frame
 
 int main(void)
 {
@@ -132,6 +60,7 @@ int main(void)
 
     bool running = true;
     SDL_Event event;
+    
     while (running){
 	memset(framebuffer, 0, WIDTH * HEIGHT * sizeof(*framebuffer));
         while (SDL_PollEvent(&event)){
@@ -139,29 +68,32 @@ int main(void)
                 running = false;
             }
             if (event.type == SDL_EVENT_KEY_DOWN) {
-                if (event.key.key == SDLK_W) {
-		    player.tx = player.tx - 1;
-		    player.ty = player.ty - 1;
-		}
-                if (event.key.key == SDLK_A) {
-		    player.tx = player.tx - 1;
-		    player.ty = player.ty + 1;
-		}
-                if (event.key.key == SDLK_D) {
-		    player.tx = player.tx + 1;
-		    player.ty = player.ty - 1;
-		}
-                if (event.key.key == SDLK_S) {
-		    player.tx = player.tx + 1;
-		    player.ty = player.ty + 1;
+		int tx_offset = 0;
+		int ty_offset = 0;
+		switch (event.key.key) {
+                case SDLK_W:
+                    tx_offset = -1;
+                    ty_offset = -1;
+                    break;
+                case SDLK_A:
+                    tx_offset = -1;
+                    ty_offset = 1;
+                    break;
+                case SDLK_D:
+                    tx_offset = 1;
+                    ty_offset = -1;
+                    break;
+                case SDLK_S:
+                    tx_offset = 1;
+                    ty_offset = 1;
+                    break;
+                default:
+                    break;
                 }
-                if (player.tx < 0) player.tx = 0;
-		if (player.ty < 0) player.ty = 0;
-		if (player.tx > COLUMNS - 1) player.tx = COLUMNS - 1;
-		if (player.ty > ROWS - 1) player.ty = ROWS - 1;
-	    }
-	}
-	render_tilemap(tilemap, framebuffer);
+                check_player_input(tx_offset, ty_offset, &player);
+            }
+        }
+    	render_tilemap(tilemap, framebuffer);
 	render_player(framebuffer, player);
 	SDL_UpdateTexture(texture, NULL, framebuffer, WIDTH * sizeof(uint32_t));
 	SDL_RenderTexture(renderer, texture, NULL, NULL);
